@@ -1,188 +1,192 @@
 # Inclusion Educ
 
-**Inclusion Educ** es una aplicación web creada para facilitar la administración de procesos educativos. Permite gestionar usuarios, escuelas, cursos, talleres, reportes de incidencias y eventos, además de controlar los permisos según el rol de cada usuario.
+Inclusion Educ es una aplicación web para la gestión educativa institucional. Permite administrar usuarios, escuelas, cursos, reportes de incidencias, eventos y talleres, así como controlar el acceso según el rol de cada usuario.
 
-## Tecnologías utilizadas
+La solución está compuesta por un frontend en Angular para la experiencia del usuario y un backend en Node.js + Express que expone una API REST y utiliza Prisma como ORM para PostgreSQL.
 
-* **Frontend:** Angular 22, TypeScript y componentes standalone.
-* **Backend:** Express, TypeScript y Prisma ORM.
-* **Base de datos:** PostgreSQL.
-* **Autenticación:** JWT y roles de usuario.
+## Descripción general
 
-## Roles del sistema
+El sistema está pensado para apoyar la organización de actividades académicas y de apoyo dentro de escuelas o instituciones educativas. Entre sus funcionalidades principales se encuentran:
 
-| Rol               | Permisos                                                                         |
-| ----------------- | -------------------------------------------------------------------------------- |
-| **Administrador** | Gestiona usuarios, escuelas, cursos, reportes, talleres y eventos.               |
-| **Orientador**    | Gestiona cursos, reportes y talleres. También puede actualizar su propio perfil. |
-| **Estudiante**    | Consulta cursos disponibles y gestiona sus matriculaciones.                      |
+- Autenticación de usuarios con JWT.
+- Gestión de usuarios, roles y escuelas.
+- Administración de cursos y matrículas.
+- Registro y seguimiento de reportes de incidencias.
+- Creación y gestión de eventos y talleres.
+- Control de acceso según permisos por rol.
+- Separación de responsabilidades entre frontend, API y base de datos.
 
-El módulo de usuarios está disponible únicamente para el **Administrador**.
+ 
 
-## Requisitos
+### Backend
+El backend sigue una arquitectura por capas:
 
-Antes de ejecutar el proyecto necesitas:
+- config: configuración general y variables de entorno.
+- controllers: controlan la lógica de cada endpoint HTTP.
+- routes: definen las rutas de la API.
+- middlewares: validaciones, autenticación y control de roles.
+- services: lógica de negocio.
+- models: acceso a datos mediante Prisma.
+- utils: utilidades para JWT y contraseñas.
 
-* Node.js 20.19+ o 22.12+
-* pnpm 9+
-* PostgreSQL 14+
-* PowerShell o CMD
+### Frontend
+El frontend se construye con Angular y tiene una estructura basada en módulos/componentes, con vistas para login, dashboard y otras pantallas principales como cursos, escuelas, reportes y eventos.
+
+## Roles y permisos
+
+| Rol | Descripción | Permisos principales |
+| --- | --- | --- |
+| Administrador | Gestiona la plataforma | Administra usuarios, escuelas, cursos, reportes, eventos y configuración general |
+| Orientador | Apoya la gestión educativa | Gestiona cursos, reportes, talleres y su perfil personal |
+| Estudiante | Participa en la plataforma | Consulta cursos disponibles, reportes y su información personal |
+
+El acceso a funcionalidades sensibles está restringido según el rol del usuario, y la API valida esta condición mediante middlewares de autenticación y permisos.
+
+## Requisitos previos
+
+Antes de iniciar el proyecto, asegúrate de tener instalado:
+
+- Node.js 20.19+ o 22.12+
+- pnpm 9+
+- PostgreSQL 14+
+- Git
+- PowerShell, CMD o terminal compatible
 
 ## Instalación
 
-Ubícate en la carpeta del proyecto:
+1. Clona el repositorio:
 
-```powershell
-cd "C:\Users\Dell Latitude\Downloads\e\inclusionEduc"
-```
+ git clone <url-del-repositorio>
+cd inclusionEduc
+ 
+2. Instala las dependencias del backend:
 
-Instala las dependencias del backend:
-
-```powershell
-cd backend
+ cd backend
 pnpm install
 pnpm exec prisma generate
-```
+ 
 
-Después instala las del frontend:
+3. Instala las dependencias del frontend:
 
-```powershell
-cd ..\frontend
+ cd ../frontend
 pnpm install
-```
+ 
+## Configuración de variables de entorno
 
-## Configuración de PostgreSQL
+Crea el archivo `.env` dentro de `backend` usando la plantilla existente:
 
-Crea una base de datos, por ejemplo:
-
-```text
-inclusion_educ
-```
-
-Luego configura el archivo `.env` del backend. Puedes crearlo a partir de la plantilla:
-
-```powershell
-cd backend
+ cd backend
 Copy-Item .env.example .env
-```
-
+ 
 Ejemplo de configuración:
 
-```env
-PORT=3000
+ PORT=3000
 NODE_ENV=development
-DATABASE_URL=postgresql://usuario:Password123!@localhost:5432/inclusion_educ
+DATABASE_URL=postgresql://usuario:password@localhost:5432/inclusion_educ
 JWT_SECRET=cambia_este_valor_por_una_clave_larga_y_secreta
 JWT_EXPIRES_IN=24h
-```
+ 
+> Cambia los valores de `DATABASE_URL` y `JWT_SECRET` según tu entorno local o de producción.
 
-Para cargar el esquema de la base de datos:
+## Base de datos
 
-```powershell
-psql "postgresql://usuario:Password123!@localhost:5432/inclusion_educ" -f schema.sql
-```
+El proyecto usa PostgreSQL junto con Prisma.
 
-También puedes utilizar Prisma:
+Puedes crear la base de datos manualmente y luego ejecutar el esquema:
 
-```powershell
+ psql "postgresql://usuario:password@localhost:5432/inclusion_educ" -f schema.sql
+ 
+También puedes sincronizar el esquema con Prisma:
+
+ cd backend
 pnpm exec prisma db push
-```
+ 
 
-> Cambia el `DATABASE_URL` y el `JWT_SECRET` según tu entorno.
-
-## Ejecutar el proyecto
+## Ejecución del proyecto
 
 ### Backend
 
-Desde la carpeta `backend`:
-
-```powershell
+Desde la carpeta `backend`: se usa cd 
+pnpm install
 pnpm dev
-```
 
-La API estará disponible en:
+La API quedará disponible en:
 
-`http://localhost:3000/api`
+http://localhost:3000/api
 
-Para compilar y ejecutar:
+También puedes compilar y ejecutar la versión de producción:
 
-```powershell
 pnpm build
 pnpm start
-```
 
 ### Frontend
 
-Desde la carpeta `frontend`:
-
-```powershell
+Desde la carpeta `frontend`: se usa cd
+pnpm install
 pnpm dev
-```
 
-La aplicación estará disponible en:
+La aplicación se abrirá en la ruta:
 
-`http://localhost:4200`
+http://localhost:4200
 
-Para generar la compilación final:
+Para compilar la versión final:
 
-```powershell
 pnpm build
-```
 
-Los archivos se generarán en `frontend/dist/frontend`.
+Los archivos compilados se generarán en:
 
-## Git y limpieza
+frontend/dist/frontend
 
-El proyecto ignora archivos y carpetas que no deben subirse al repositorio:
+## Endpoints principales
 
- `node_modules`
- `dist`
- `build`
- `.angular`
- `coverage`
- `.env`
+La API REST del backend expone endpoints agrupados por funcionalidad:
 
-Si necesitas hacer una compilación limpia, puedes eliminar `dist` y volver a ejecutar `pnpm build`.
-
-### Backend
-
-```powershell
-cd backend
-Remove-Item -Recurse -Force dist
-pnpm build
-```
-
-### Frontend
-
-```powershell
-cd ..\frontend
-Remove-Item -Recurse -Force dist
-pnpm build
-```
+- `/api/auth` - inicio de sesión y registro
+- `/api/usuarios` - gestión de usuarios
+- `/api/escuelas` - administración de escuelas
+- `/api/cursos` - cursos y matrículas
+- `/api/reportes` - reportes de incidencias
+- `/api/eventos` - eventos y talleres
 
 ## Cuentas de prueba
 
-El archivo `schema.sql` incluye cuentas para probar los diferentes roles.
+El archivo `schema.sql` incluye usuarios de prueba para validar los roles del sistema.
 
-| Rol           | Correo                    |
-| ------------- | ------------------------- |
-| Administrador | `admin@inclusioneduc.org` |
-| Orientador    | `elena.gomez@sanjose.edu` |
-| Estudiante    | `carlos.m@estudiante.edu` |
+| Rol           | Correo                    | Contraseña      |
+| ---           | ---                       | ---             |
+| Administrador | `admin@inclusioneduc.org` | `Password123!`  |
+| Orientador    | `elena.gomez@sanjose.edu` | `Password123!`  |
+| Estudiante    | `carlos.m@estudiante.edu` | `Password123!`  |
 
-**Contraseña de prueba:**
+Estas cuentas sirven para pruebas locales y deben cambiarse en entornos reales.
 
-```text
-Password123!
-```
+## Flujo esperado de uso
 
- Estas cuentas son para pruebas. Se recomienda cambiar las contraseñas antes de utilizar el proyecto en un entorno compartido o de producción.
+1. El usuario accede al frontend e inicia sesión.
+2. El backend valida credenciales y devuelve un JWT.
+3. El frontend almacena la sesión y permite navegar según el rol del usuario.
+4. El usuario puede acceder a cursos, escuelas, eventos, reportes y perfil.
+5. El administrador puede gestionar usuarios y configuraciones del sistema.
+6. Los demás roles acceden solo a las secciones permitidas por su nivel de permisos.
 
-## Acceso rápido
+## Mantenimiento y limpieza
 
-Una vez iniciado el proyecto:
+El repositorio ignora archivos generados y sensibles como:
 
-* **Frontend:** `http://localhost:4200`
-* **Backend API:** `http://localhost:3000/api`
+- `node_modules`
+- `dist`
+- `build`
+- `.angular`
+- `coverage`
+- `.env`
 
-Para trabajar normalmente, solo necesitas ejecutar `pnpm dev` en el backend y frontend.
+ 
+## Uso de IA
+- Se admite el uso de ia en la idea y estructura de prisma para poderme guiar en poder conectar de mejor manera la base de datos
+de postgrestSQL.
+- Tambien se admite en todos los css y la mayoria de htmls.
+- Con las demas cosas se tomo una guia de trabajos anteriores y 
+
+## Conclusión
+
+Inclusion Educ busca centralizar la gestión académica y de incidencias de una institución educativa en una plataforma moderna, segura y fácil de operar. La combinación de Angular, Express y Prisma permite una solución escalable, mantenible y preparada para crecer con nuevas funcionalidades.
