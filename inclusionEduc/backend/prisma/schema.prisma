@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"  
+  url      = env("DATABASE_URL")
+}
+
+model Rol {
+  rol_id   Int       @id @default(autoincrement())
+  nombre   String    @unique @db.VarChar(30)
+  usuarios Usuario[]
+
+  @@map("roles")
+}
+
+model Escuela {
+  escuela_id      Int                  @id @default(autoincrement())
+  nombre          String               @db.VarChar(150)
+  codigo_distrito String?              @db.VarChar(20)
+  direccion       String?              @db.VarChar(255)
+  creado_en       DateTime             @default(now())
+  usuarios        Usuario[]
+  reportes        ReporteIncidencia[]
+  eventos         EventoTaller[]
+
+  @@map("escuelas")
+}
+
+model Usuario {
+  usuario_id    Int                 @id @default(autoincrement())
+  rol_id        Int
+  escuela_id    Int?
+  nombre        String              @db.VarChar(100)
+  email         String              @unique @db.VarChar(100)
+  password_hash String              @db.VarChar(255)
+  estado        String              @default("activo") @db.VarChar(20)
+  creado_en     DateTime            @default(now())
+
+  rol           Rol                 @relation(fields: [rol_id], references: [rol_id])
+  escuela       Escuela?            @relation(fields: [escuela_id], references: [escuela_id], onDelete: SetNull)
+  reportes      ReporteIncidencia[]
+  inscripciones InscripcionCurso[]
+  eventos       EventoTaller[]
+
+  @@map("usuarios")
+}
+
+model ReporteIncidencia {
+  reporte_id      Int      @id @default(autoincrement())
+  escuela_id      Int
+  tipo_acoso      String   @db.VarChar(50)
+  descripcion     String   @db.Text
+  nivel_prioridad String   @default("Media") @db.VarChar(20)
+  estado          String   @default("Pendiente") @db.VarChar(20)
+  es_anonimo      Boolean  @default(true)
+  usuario_id      Int?
+  creado_en       DateTime @default(now())
+
+  escuela         Escuela  @relation(fields: [escuela_id], references: [escuela_id], onDelete: Cascade)
+  usuario         Usuario? @relation(fields: [usuario_id], references: [usuario_id], onDelete: SetNull)
+
+  @@map("reportes_incidencia")
+}
+
+model Curso {
+  curso_id      Int                @id @default(autoincrement())
+  titulo        String             @db.VarChar(120)
+  descripcion   String             @db.Text
+  duracion_min  Int
+  nivel         String             @default("Básico") @db.VarChar(20)
+  video_url     String?            @db.Text
+  pdf_data      String?            @db.Text
+  pdf_name      String?            @db.VarChar(255)
+  creado_en     DateTime           @default(now())
+  inscripciones InscripcionCurso[]
+
+  @@map("cursos")
+}
+
+model InscripcionCurso {
+  inscripcion_id      Int       @id @default(autoincrement())
+  usuario_id          Int
+  curso_id            Int
+  estado              String    @default("En Curso") @db.VarChar(20)
+  porcentaje_progreso Int       @default(0)
+  fecha_completado    DateTime?
+
+  usuario             Usuario   @relation(fields: [usuario_id], references: [usuario_id], onDelete: Cascade)
+  curso               Curso     @relation(fields: [curso_id], references: [curso_id], onDelete: Cascade)
+
+  @@unique([usuario_id, curso_id])
+  @@map("inscripciones_cursos")
+}
+
+model EventoTaller {
+  evento_id    Int      @id @default(autoincrement())
+  escuela_id   Int
+  creador_id   Int
+  titulo       String   @db.VarChar(150)
+  fecha_evento DateTime
+  lugar        String   @db.VarChar(100)
+
+  escuela      Escuela  @relation(fields: [escuela_id], references: [escuela_id], onDelete: Cascade)
+  creador      Usuario  @relation(fields: [creador_id], references: [usuario_id])
+
+  @@map("eventos_talleres")
+}

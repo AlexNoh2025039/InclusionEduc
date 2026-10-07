@@ -1,0 +1,10 @@
+<div class="report-card" [ngClass]="getStatusClass()">
+    <div class="report-header">
+        <h4>{{ report?.title }}</h4>
+        <span class="status-badge" [ngClass]="getStatusClass()">
+            {{ getStatusText() }}
+        </span>
+    </div>
+    <span class="date">{{ report?.date }}</span>
+    <p>{{ report?.description }}</p>
+</div>

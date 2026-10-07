@@ -1,0 +1,56 @@
+.school-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.25rem;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+h3 {
+    margin: 0;
+    color: #1a237e;
+}
+
+.address {
+    color: #757575;
+    font-size: 0.85rem;
+    margin: 0.25rem 0 0.75rem 0;
+}
+
+.phone {
+    font-size: 0.9rem;
+    color: #424242;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+}
+
+.tag {
+    background-color: #f0f4c3;
+    color: #33691e;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+}
+
+button {
+    margin-top: 1rem;
+    background: transparent;
+    border: 1px solid #1a237e;
+    color: #1a237e;
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #1a237e;
+    color: #fff;
+}

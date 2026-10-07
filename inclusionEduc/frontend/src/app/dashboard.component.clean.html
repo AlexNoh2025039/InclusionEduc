@@ -1,0 +1,102 @@
+<header class="topbar">
+    <div><span class="eyebrow">Espacio educativo</span>
+        <h1>Dashboard</h1>
+    </div>
+    <div class="actions"><span class="user-name">{{ user?.nombre ?? 'Estudiante' }}</span><button
+            (click)="logout()">Cerrar sesión</button></div>
+</header>
+<main class="dashboard">
+    <nav class="tabs" aria-label="Secciones del dashboard">
+        <button [class.active]="activeSection === 'schools'" (click)="activeSection = 'schools'">Escuelas</button>
+        <button [class.active]="activeSection === 'courses'" (click)="activeSection = 'courses'">Cursos</button>
+        <button [class.active]="activeSection === 'reports'" (click)="activeSection = 'reports'">Reportes</button>
+        <button [class.active]="activeSection === 'events'" (click)="activeSection = 'events'">Talleres</button>
+    </nav>
+
+    @if (loading) { <p class="loading">Cargando información...</p> }
+    @else if (error) { <p class="error" role="alert">{{ error }}</p> }
+    @else {
+    @if (activeSection === 'schools') {
+    <section>
+        <h2>Escuelas disponibles</h2>
+        <div class="grid">
+            @for (school of schools; track school.id) {
+            <app-school-card [school]="school" (viewDetails)="activeSection = 'reports'" />
+            }
+        </div>
+    </section>
+    }
+
+    @if (activeSection === 'courses') {
+    <section>
+        <h2>Cursos para ti</h2>
+        <div class="grid">
+            @for (course of courses; track course.id) {
+            <app-course-card [course]="course" (selectCourse)="selectCourse($event)" />
+            }
+        </div>
+    </section>
+    }
+
+    @if (activeSection === 'reports') {
+    <section class="section-grid">
+        <div>
+            <h2>Reportes de incidencia</h2>
+            <div class="grid">
+                @for (report of reports; track report.id) {
+                <app-report-card [report]="report" />
+                }
+            </div>
+        </div>
+        <form class="form-card" (ngSubmit)="createReport()">
+            <h3>Crear reporte</h3>
+            <label>Escuela
+                <select [(ngModel)]="reportForm.escuela_id" name="escuela_id">
+                    <option value="">Selecciona una escuela</option>
+                    @for (school of schools; track school.id) { <option [value]="school.id">{{ school.name }}</option> }
+                </select>
+            </label>
+            <label>Tipo de acoso<input [(ngModel)]="reportForm.tipo_acoso" name="tipo_acoso" required
+                    placeholder="Acoso, violencia, discriminación" /></label>
+            <label>Descripción<textarea [(ngModel)]="reportForm.descripcion" name="descripcion"
+                    required></textarea></label>
+            <label>Prioridad<select [(ngModel)]="reportForm.nivel_prioridad" name="nivel_prioridad">
+                    <option>Alta</option>
+                    <option>Media</option>
+                    <option>Baja</option>
+                </select></label>
+            <button type="submit">Guardar reporte</button>
+        </form>
+    </section>
+    }
+
+    @if (activeSection === 'events') {
+    <section class="section-grid">
+        <div>
+            <h2>Talleres y eventos</h2>
+            @for (event of events; track event.evento_id) {
+            <article class="event-card">
+                <h3>{{ event.titulo }}</h3>
+                <p>{{ event.lugar }} · {{ event.fecha_evento }}</p>
+                <small>{{ event.escuela?.nombre ?? 'Escuela' }}</small>
+            </article>
+            }
+        </div>
+        <form class="form-card" (ngSubmit)="createEvent()">
+            <h3>Crear taller</h3>
+            <label>Escuela
+                <select [(ngModel)]="eventForm.escuela_id" name="escuela_id">
+                    <option value="">Selecciona una escuela</option>
+                    @for (school of schools; track school.id) { <option [value]="school.id">{{ school.name }}</option> }
+                </select>
+            </label>
+            <label>Título<input [(ngModel)]="eventForm.titulo" name="titulo" required /></label>
+            <label>Fecha<input type="datetime-local" [(ngModel)]="eventForm.fecha_evento" name="fecha_evento"
+                    required /></label>
+            <label>Lugar<input [(ngModel)]="eventForm.lugar" name="lugar" required /></label>
+            <button type="submit">Guardar taller</button>
+        </form>
+    </section>
+    }
+    }
+</main>

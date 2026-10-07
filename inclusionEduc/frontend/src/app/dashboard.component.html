@@ -1,0 +1,305 @@
+﻿<header class="topbar">
+    <div><span class="eyebrow">Espacio educativo</span>
+        <h1>Dashboard</h1>
+    </div>
+    <div class="actions"><span class="user-name">{{ user?.nombre ?? 'Estudiante' }}</span><button type="button"
+            (click)="logout()">Cerrar sesión</button></div>
+</header>
+<main class="dashboard">
+    <nav class="tabs" aria-label="Secciones del dashboard">
+        <button [class.active]="activeSection === 'schools'" (click)="activeSection = 'schools'">Escuelas</button>
+        <button [class.active]="activeSection === 'courses'" (click)="activeSection = 'courses'">Cursos</button>
+        @if (canManageCourses()) {
+        <button [class.active]="activeSection === 'reports'" (click)="activeSection = 'reports'">Reportes</button>
+        <button [class.active]="activeSection === 'events'" (click)="activeSection = 'events'">Talleres</button>
+        }
+        @if (isAdmin()) {
+        <button [class.active]="activeSection === 'users'" (click)="activeSection = 'users'">Usuarios</button>
+        <button [class.active]="activeSection === 'schools-management'"
+            (click)="activeSection = 'schools-management'">Escuelas</button>
+        }
+        @if (canManageCourses()) {
+        <button [class.active]="activeSection === 'profile'" (click)="activeSection = 'profile'">Mi perfil</button>
+        }
+    </nav>
+
+    @if (loading) { <p class="loading" role="status">Cargando información...</p> }
+    @else if (error) {
+    <div class="page-alert" role="alert">
+        <span>{{ error }}</span>
+        <button type="button" class="button-ghost" (click)="error = ''">Cerrar</button>
+    </div>
+    }
+    @else {
+    @if (activeSection === 'schools') {
+    <section>
+        <div class="section-heading">
+            <div>
+                <h2>Escuelas disponibles</h2>
+                <p>Selecciona una escuela para consultar reportes y talleres.</p>
+            </div>
+        </div>
+        @if (schools.length === 0) {
+        <p class="empty-state">No hay escuelas disponibles.</p>
+        } @else {
+        <div class="grid">
+            @for (school of schools; track school.id) {
+            <app-school-card [school]="school" (viewDetails)="activeSection = 'reports'" />
+            }
+        </div>
+        }
+    </section>
+    }
+
+    @if (activeSection === 'courses' || activeSection === 'course-create') {
+    <section>
+        <div class="section-heading">
+            <div>
+                <h2>{{ canManageCourses() ? 'Cursos disponibles' : 'Cursos para ti' }}</h2>
+                <p>{{ canManageCourses() ? 'Administra contenidos educativos.' : 'Inscríbase en los cursos disponibles.'
+                    }}</p>
+            </div>
+            @if (canManageCourses()) {
+            <button type="button" (click)="activeSection = 'course-create'">Crear curso</button>
+            }
+        </div>
+
+        @if (activeSection === 'course-create') {
+        <form class="form-card" (ngSubmit)="createCourse()">
+            <h3>{{ editingCourseId ? 'Editar curso' : 'Crear curso' }}</h3>
+            <label>Título<input [(ngModel)]="courseForm.titulo" name="titulo" required maxlength="120" /></label>
+            <label>Descripción<textarea [(ngModel)]="courseForm.descripcion" name="descripcion"
+                    required></textarea></label>
+            <div class="form-row">
+                <label>Duración (minutos)<input type="number" [(ngModel)]="courseForm.duracion_min" name="duracion_min"
+                        min="1" required /></label>
+                <label>Nivel<select [(ngModel)]="courseForm.nivel" name="nivel">
+                        <option>Básico</option>
+                        <option>Intermedio</option>
+                        <option>Avanzado</option>
+                    </select></label>
+            </div>
+            <label>Enlace de contenido <small>(opcional; puede ser YouTube o un recurso externo)</small>
+                <input type="url" [(ngModel)]="courseForm.video_url" name="video_url" placeholder="https://..." />
+            </label>
+            <label>Documento PDF <small>(opcional; máximo 10 MB)</small>
+                <input type="file" accept="application/pdf,.pdf" (change)="selectPdf($event)" />
+            </label>
+            @if (courseForm.pdf_name) {
+            <p class="selected-file">Archivo seleccionado: {{ courseForm.pdf_name }}</p>
+            }
+            <div class="button-row">
+                <button type="submit">Guardar curso</button>
+                <button type="button" (click)="editingCourseId = null; activeSection = 'courses'">Cancelar</button>
+            </div>
+        </form>
+        }
+
+        @if (courses.length === 0) {
+        <p class="empty-state">No hay cursos disponibles aún.</p>
+        } @else {
+        <div class="grid" style="margin-top: 1rem;">
+            @for (course of courses; track course.id) {
+            <div class="course-management-item">
+                <app-course-card [course]="course" (selectCourse)="selectCourse($event)" />
+                @if (canManageCourses()) {
+                <div class="button-row">
+                    <button type="button" (click)="startEditCourse(course.id)">Editar curso</button>
+                    <button type="button" class="button-danger" (click)="deleteCourse(course.id)">Eliminar
+                        curso</button>
+                </div>
+                }
+            </div>
+            }
+        </div>
+        }
+    </section>
+    }
+
+    @if (activeSection === 'reports' && canManageCourses()) {
+    <section class="section-grid">
+        <div>
+            <h2>Reportes de incidencia</h2>
+            <div class="grid">
+                @for (report of reports; track report.id) {
+                <article class="event-card">
+                    <app-report-card [report]="report" />
+                    @if (canManageCourses()) {
+                    <div class="button-row">
+                        <button type="button" (click)="startEditReport(parseInt(report.id, 10))">Editar</button>
+                        <button type="button" class="button-danger"
+                            (click)="deleteReport(parseInt(report.id, 10))">Eliminar</button>
+                    </div>
+                    }
+                </article>
+                }
+            </div>
+        </div>
+        <form class="form-card" (ngSubmit)="createReport()">
+            <h3>{{ editingReportId ? 'Editar reporte' : 'Crear reporte' }}</h3>
+            <label>Escuela
+                <select [(ngModel)]="reportForm.escuela_id" name="escuela_id">
+                    <option value="">Selecciona una escuela</option>
+                    @for (school of schools; track school.id) { <option [value]="school.id">{{ school.name }}</option> }
+                </select>
+            </label>
+            <label>Tipo de acoso<input [(ngModel)]="reportForm.tipo_acoso" name="tipo_acoso" required
+                    placeholder="Acoso, violencia, discriminación" /></label>
+            <label>Descripción<textarea [(ngModel)]="reportForm.descripcion" name="descripcion"
+                    required></textarea></label>
+            <label>Prioridad<select [(ngModel)]="reportForm.nivel_prioridad" name="nivel_prioridad">
+                    <option>Alta</option>
+                    <option>Media</option>
+                    <option>Baja</option>
+                </select></label>
+            <div class="button-row">
+                <button type="submit">Guardar reporte</button>
+                <button type="button"
+                    (click)="editingReportId = null; reportForm = { escuela_id: '', tipo_acoso: '', descripcion: '', nivel_prioridad: 'Media' }">Cancelar</button>
+            </div>
+        </form>
+    </section>
+    }
+
+    @if (activeSection === 'users' && isAdmin()) {
+    <section class="section-grid">
+        <div>
+            <h2>Usuarios</h2>
+            <div class="grid">
+                @for (userItem of users; track userItem.usuario_id) {
+                <article class="event-card">
+                    <h3>{{ userItem.nombre }}</h3>
+                    <p>{{ userItem.email }} · {{ userItem.rol?.nombre ?? 'Rol' }}</p>
+                    <small>{{ userItem.escuela?.nombre ?? 'Sin escuela' }}</small>
+                    <div class="button-row">
+                        <button type="button"
+                            (click)="editingUserId = userItem.usuario_id; userForm.nombre = userItem.nombre; userForm.email = userItem.email; userForm.rol_id = userItem.rol_id; userForm.escuela_id = (userItem.escuela?.escuela_id ?? '').toString()">Editar</button>
+                        <button type="button" class="button-danger"
+                            (click)="deleteUser(userItem.usuario_id)">Eliminar</button>
+                    </div>
+                </article>
+                }
+            </div>
+        </div>
+        <form class="form-card" (ngSubmit)="saveUser()">
+            <h3>{{ editingUserId ? 'Editar usuario' : 'Crear usuario' }}</h3>
+            <label>Nombre<input [(ngModel)]="userForm.nombre" name="nombre" required /></label>
+            <label>Correo<input type="email" [(ngModel)]="userForm.email" name="email" required /></label>
+            <label>Contraseña<input type="password" [(ngModel)]="userForm.password" name="password"
+                    [required]="editingUserId === null" placeholder="Requerida solo al crear" /></label>
+            <label>Rol<select [(ngModel)]="userForm.rol_id" name="rol_id">
+                    <option [ngValue]="1">Administrador</option>
+                    <option [ngValue]="2">Orientador</option>
+                    <option [ngValue]="3">Estudiante</option>
+                </select></label>
+            <label>Escuela<select [(ngModel)]="userForm.escuela_id" name="escuela_id">
+                    <option value="">Sin escuela</option>
+                    @for (school of schools; track school.id) { <option [value]="school.id">{{ school.name }}</option> }
+                </select></label>
+            <div class="button-row"><button type="submit">Guardar usuario</button><button type="button"
+                    (click)="editingUserId = null; userForm = { nombre: '', email: '', password: '', rol_id: 3, escuela_id: '' }">Cancelar</button>
+            </div>
+        </form>
+    </section>
+    }
+
+    @if (activeSection === 'profile') {
+    <section class="section-grid">
+        <div>
+            <h2>Mi perfil</h2>
+            <p>Solo puedes modificar tu propio perfil. No se muestra ni se puede administrar la lista completa de
+                usuarios.</p>
+            <article class="event-card">
+                <h3>{{ user?.nombre ?? 'Usuario' }}</h3>
+                <p>{{ user?.email ?? '' }}</p>
+                <small>Rol: {{ user?.rol?.nombre ?? 'Sin rol' }}</small>
+            </article>
+        </div>
+        <form class="form-card" (ngSubmit)="saveProfile()">
+            <h3>Actualizar datos personales</h3>
+            <label>Nombre<input [(ngModel)]="profileForm.nombre" name="nombre"
+                    placeholder="Déjelo vacío si no quieres cambiar el nombre" /></label>
+            <label>Correo<input type="email" [(ngModel)]="profileForm.email" name="email"
+                    placeholder="Déjelo vacío si no quieres cambiar el correo" /></label>
+            <label>Nueva contraseña<input type="password" [(ngModel)]="profileForm.password" name="password"
+                    placeholder="Déjelo vacío si no quieres cambiar la contraseña" /></label>
+            <div class="button-row">
+                <button type="submit">Guardar perfil</button>
+                <button type="button" (click)="activeSection = 'schools'">Cerrar</button>
+            </div>
+        </form>
+    </section>
+    }
+
+    @if (activeSection === 'schools-management' && isAdmin()) {
+    <section class="section-grid">
+        <div>
+            <h2>Escuelas</h2>
+            <div class="grid">
+                @for (school of schools; track school.id) {
+                <article class="event-card">
+                    <h3>{{ school.name }}</h3>
+                    <p>{{ school.address }} · {{ school.phone ?? 'Sin teléfono' }}</p>
+                    <div class="button-row">
+                        <button type="button"
+                            (click)="editingSchoolId = parseInt(school.id, 10); schoolForm.nombre = school.name; schoolForm.direccion = school.address; schoolForm.telefono = school.phone ?? ''">Editar</button>
+                        <button type="button" class="button-danger"
+                            (click)="deleteSchool(parseInt(school.id, 10))">Eliminar</button>
+                    </div>
+                </article>
+                }
+            </div>
+        </div>
+        <form class="form-card" (ngSubmit)="saveSchool()">
+            <h3>{{ editingSchoolId ? 'Editar escuela' : 'Crear escuela' }}</h3>
+            <label>Nombre<input [(ngModel)]="schoolForm.nombre" name="nombre" required /></label>
+            <label>Código<input [(ngModel)]="schoolForm.codigo_distrito" name="codigo_distrito" /></label>
+            <label>Dirección<input [(ngModel)]="schoolForm.direccion" name="direccion" /></label>
+            <label>Teléfono<input [(ngModel)]="schoolForm.telefono" name="telefono" /></label>
+            <div class="button-row"><button type="submit">Guardar escuela</button><button type="button"
+                    (click)="editingSchoolId = null; schoolForm = { nombre: '', codigo_distrito: '', direccion: '', telefono: '' }">Cancelar</button>
+            </div>
+        </form>
+    </section>
+    }
+
+    @if (activeSection === 'events' && canManageCourses()) {
+    <section class="section-grid">
+        <div>
+            <h2>Talleres y eventos</h2>
+            @if (events.length === 0) {
+            <p class="empty-state">No hay talleres disponibles aún.</p>
+            } @else {
+            @for (event of events; track event.evento_id) {
+            <article class="event-card">
+                <h3>{{ event.titulo }}</h3>
+                <p>{{ event.lugar }} · {{ event.fecha_evento }}</p>
+                <small>{{ event.escuela?.nombre ?? 'Escuela' }}</small>
+                @if (isAdmin()) {
+                <button type="button" class="button-danger" (click)="deleteEvent(event.evento_id)">Eliminar
+                    taller</button>
+                }
+            </article>
+            }
+            }
+        </div>
+        @if (isAdmin()) {
+        <form class="form-card" (ngSubmit)="createEvent()">
+            <h3>Crear taller</h3>
+            <label>Escuela
+                <select [(ngModel)]="eventForm.escuela_id" name="escuela_id">
+                    <option value="">Selecciona una escuela</option>
+                    @for (school of schools; track school.id) { <option [value]="school.id">{{ school.name }}</option> }
+                </select>
+            </label>
+            <label>Título<input [(ngModel)]="eventForm.titulo" name="titulo" required /></label>
+            <label>Fecha<input type="datetime-local" [(ngModel)]="eventForm.fecha_evento" name="fecha_evento"
+                    required /></label>
+            <label>Lugar<input [(ngModel)]="eventForm.lugar" name="lugar" required /></label>
+            <button type="submit">Guardar taller</button>
+        </form>
+        }
+    </section>
+    }
+    }
+</main>

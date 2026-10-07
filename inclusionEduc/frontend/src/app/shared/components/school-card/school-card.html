@@ -1,0 +1,18 @@
+<div class="school-card">
+    <div class="card-header">
+        <h3>{{ school?.name }}</h3>
+        <p class="address">📍 {{ school?.address }}</p>
+    </div>
+
+    <div class="card-body">
+        <p *ngIf="school?.phone" class="phone">📞 {{ school.phone }}</p>
+
+        <div class="tags">
+            <span *ngFor="let feature of school?.inclusiveFeatures" class="tag">
+                {{ feature }}
+            </span>
+        </div>
+    </div>
+
+    <button (click)="onDetails()">Ver Detalles</button>
+</div>
